@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fracture DNA Terminal</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;600&display=swap');
+
+        :root {
+            --neon-blue: #00f3ff;
+            --dark-blue: #001215;
+            --active-green: #00ff9d;
+            --inactive-gray: #2a2a2a;
+            --terminal-width: 900px;
+            --terminal-height: 700px;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            font-family: 'Chakra Petch', sans-serif;
+            color: var(--neon-blue);
+            letter-spacing: 0.5px;
+        }
+
+        .terminal {
+            width: var(--terminal-width);
+            height: var(--terminal-height);
+            background: var(--dark-blue);
+            position: relative;
+            padding: 25px;
+            box-sizing: border-box;
+            border: 1px solid var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.3);
+        }
+
+        .title {
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .title span {
+            font-weight: 300;
+            opacity: 0.8;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 25px;
+            height: calc(100% - 130px);
+        }
+
+        .visualization {
+            flex: 1;
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            background: rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .right-panel {
+            width: 280px;
+        }
+
+        .stats-container {
+            background: rgba(0, 243, 255, 0.03);
+            padding: 15px;
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 0.9em;
+        }
+
+        .stat-row span:last-child {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .control-button {
+            background: rgba(0, 243, 255, 0.05);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            color: var(--neon-blue);
+            padding: 10px;
+            font-family: 'Chakra Petch', sans-serif;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .control-button::before {
+            content: '⦿';
+            margin-right: 8px;
+            opacity: 0.5;
+        }
+
+        .control-button:hover {
+            background: rgba(0, 243, 255, 0.1);
+            border-color: var(--neon-blue);
+        }
+
+        .control-button.active {
+            background: var(--neon-blue);
+            color: var(--dark-blue);
+        }
+
+        .control-button.active::before {
+            opacity: 1;
+        }
+
+        .audio-select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            color: var(--neon-blue);
+            padding: 8px;
+            font-family: 'Chakra Petch', sans-serif;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+
+        .grid-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-top: 1px solid rgba(0, 243, 255, 0.3);
+            font-size: 0.9em;
+        }
+
+        .grid-nav span {
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+            cursor: pointer;
+        }
+
+        .grid-nav span:hover {
+            opacity: 1;
+        }
+
+        .dna-sequence {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+
+        #canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Mutation Strength Slider */
+        .mutation-strength {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid rgba(0, 243, 255, 0.2);
+        }
+
+        .strength-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        .strength-bar {
+            height: 4px;
+            background: rgba(0, 243, 255, 0.2);
+            position: relative;
+        }
+
+        .strength-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 50%;
+            background: var(--neon-blue);
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <div class="header">
+            <div class="title">FRACTURE <span>sequence terminal</span></div>
+            <div>GEN: 1 | ID: CREEPS#8484</div>
+        </div>
+
+        <div class="main-content">
+            <div class="visualization">
+                <canvas id="canvas"></canvas>
+                <div class="dna-sequence">AGGA-GTCA-GAGG</div>
+            </div>
+
+            <div class="right-panel">
+                <div class="stats-container">
+                    <div class="stat-row">
+                        <span>Status</span>
+                        <span>High Council</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Neural Sync</span>
+                        <span>Synced</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Echo Level</span>
+                        <span>100/100</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Mind State</span>
+                        <span>Aligned</span>
+                    </div>
+                </div>
+
+                <div class="control-grid">
+                    <button class="control-button active">MUTATION</button>
+                    <button class="control-button">LOGBOOK</button>
+                    <button class="control-button">VISUALIZE</button>
+                    <button class="control-button">SETTINGS</button>
+                    <button class="control-button">EXTENSION</button>
+                     <button class="control-button">INVENTORY</button>
+                </div>
+
+                <div class="mutation-strength">
+                    <div class="strength-label">
+                        <span>Grid Capacity</span>
+                        <span>50%</span>
+                    </div>
+                    <div class="strength-bar">
+                        <div class="strength-fill"></div>
+                    </div>
+                </div>
+
+                <select class="audio-select">
+                    <option>Luidsprekers (Steam Streaming Speakers)</option>
+                    <option>VoiceMeeter Input (VB-Audio VoiceMeeter VAIO)</option>
+                    <option>CABLE Input (VB-Audio Virtual Cable)</option>
+                    <option>Luidsprekers (3- Virus TI Audio 2.9.66)</option>
+                    <option>VG248 (NVIDIA High Definition Audio)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="grid-nav">
+            <span>GRID I</span>
+            <span>GRID II</span>
+            <span>GRID III</span>
+            <span>GRID IV</span>
+            <span>GRID V</span>
+        </div>
+    </div>
+
+    <script>
+        // Previous canvas animation code remains the same
+        // (Keeping the particle system animation for brevity)
+        
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Create circular animation
+        function drawCircle(time) {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(canvas.width, canvas.height) * 0.4;
+
+            // Draw main circle
+            ctx.beginPath();
+            ctx.strokeStyle = '#00f3ff';
+            ctx.lineWidth = 2;
+            
+            for (let i = 0; i < 360; i++) {
+                const angle = (i + time/20) * Math.PI / 180;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            
+            ctx.stroke();
+
+            // Draw secondary wave
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(0, 243, 255, 0.5)';
+            
+            for (let i = 0; i < 360; i++) {
+                const angle = (i - time/30) * Math.PI / 180;
+                const waveRadius = radius + Math.sin(i * Math.PI / 45) * 10;
+                const x = centerX + waveRadius * Math.cos(angle);
+                const y = centerY + waveRadius * Math.sin(angle);
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            
+            ctx.stroke();
+
+            requestAnimationFrame((t) => drawCircle(t));
+        }
+
+        drawCircle(0);
+
+        // Button interaction
+        document.querySelectorAll('.control-button').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.control-button').forEach(b => {
+                    b.classList.remove('active');
+                });
+                button.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
